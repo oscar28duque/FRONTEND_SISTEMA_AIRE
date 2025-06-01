@@ -1,46 +1,86 @@
-# Getting Started with Create React App
+# Sistema de Monitoreo de Aire - Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Frontend del Sistema de Monitoreo de Aire desarrollado con React y TypeScript.
 
-## Available Scripts
+## Requisitos
 
-In the project directory, you can run:
+- Node.js (versión 14 o superior)
+- npm o yarn
 
-### `npm start`
+## Instalación
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+1. Clonar el repositorio:
+```bash
+git clone [URL_DEL_REPOSITORIO]
+cd [NOMBRE_DEL_REPOSITORIO]
+```
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+2. Instalar dependencias:
+```bash
+npm install
+# o
+yarn install
+```
 
-### `npm test`
+3. Configurar variables de entorno:
+Crear un archivo `.env` en la raíz del proyecto con las siguientes variables:
+```
+REACT_APP_API_URL=http://localhost:8000/api
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+4. Iniciar el servidor de desarrollo:
+```bash
+npm start
+# o
+yarn start
+```
 
-### `npm run build`
+## Estructura del Proyecto
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```
+src/
+├── components/     # Componentes reutilizables
+├── config/        # Configuración (axios, etc.)
+├── services/      # Servicios de API
+├── pages/         # Páginas de la aplicación
+├── hooks/         # Custom hooks
+├── utils/         # Utilidades
+└── types/         # Definiciones de tipos TypeScript
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Características
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- Autenticación de usuarios
+- Gestión de zonas y estaciones
+- Monitoreo de sensores en tiempo real
+- Sistema de alertas
+- Generación de reportes
+- Dashboard personalizable
 
-### `npm run eject`
+## Tecnologías Utilizadas
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+- React
+- TypeScript
+- Material-UI
+- Redux Toolkit
+- Axios
+- React Router
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Scripts Disponibles
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+- `npm start`: Inicia el servidor de desarrollo
+- `npm build`: Construye la aplicación para producción
+- `npm test`: Ejecuta las pruebas
+- `npm eject`: Expulsa la configuración de Create React App
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+## Contribución
 
-## Learn More
+1. Fork el proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Licencia
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Este proyecto está bajo la Licencia MIT.
