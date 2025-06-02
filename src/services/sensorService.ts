@@ -1,66 +1,74 @@
-import api from '../config/axios';
+import axios from 'axios';
 
-export type SensorState = 'activo' | 'inactivo' | 'mantenimiento' | 'calibracion';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
 export interface Sensor {
     id: number;
     tipo_sensor: string;
     modelo: string;
-    unidad_medida: string;
-    fecha_instalacion: string;
-    fecha_ultima_calibracion: string | null;
-    estado: SensorState;
-    estacion: number; // ID de la estación
+    estado: string;
+    estacion: number;
     rango_minimo: number | null;
     rango_maximo: number | null;
+    unidad_medida: string | null;
+    fecha_instalacion: string | null;
+    fecha_ultima_calibracion: string | null;
     created_at: string;
     updated_at: string;
     is_active: boolean;
 }
 
+interface SensorFilters {
+    tipo_sensor?: string;
+    estado?: string;
+    estacion?: number;
+    is_active?: boolean;
+}
+
 const sensorService = {
-    // Obtener todos los sensores
-    getAllSensors: async (): Promise<Sensor[]> => {
-        const response = await api.get('sensores/');
+    getAllSensors: async (filters: SensorFilters = {}) => {
+        const response = await axios.get(`${API_URL}/sensors`, { params: filters });
         return response.data;
     },
 
-    // Obtener un sensor por ID
-    getSensorById: async (id: number): Promise<Sensor> => {
-        const response = await api.get(`sensores/${id}/`);
+    getSensorById: async (id: number) => {
+        const response = await axios.get(`${API_URL}/sensors/${id}`);
         return response.data;
     },
 
-    // Crear un nuevo sensor
-    createSensor: async (sensorData: Omit<Sensor, 'id' | 'created_at' | 'updated_at'>): Promise<Sensor> => {
-        const response = await api.post('sensores/', sensorData);
+    createSensor: async (sensor: Omit<Sensor, 'id' | 'created_at' | 'updated_at'>) => {
+        const response = await axios.post(`${API_URL}/sensors`, sensor);
         return response.data;
     },
 
-    // Actualizar un sensor
-    updateSensor: async (id: number, sensorData: Partial<Sensor>): Promise<Sensor> => {
-        const response = await api.put(`sensores/${id}/`, sensorData);
+    updateSensor: async (id: number, sensor: Partial<Sensor>) => {
+        const response = await axios.put(`${API_URL}/sensors/${id}`, sensor);
         return response.data;
     },
 
-    // Eliminar un sensor
-    deleteSensor: async (id: number): Promise<void> => {
-        await api.delete(`sensores/${id}/`);
+    deleteSensor: async (id: number) => {
+        const response = await axios.delete(`${API_URL}/sensors/${id}`);
+        return response.data;
     },
 
-    // Obtener lecturas de un sensor
-    getSensorReadings: async (sensorId: number, params?: {
+    calibrateSensor: async (id: number) => {
+        const response = await axios.put(`${API_URL}/sensors/${id}/calibrate`, {
+            fecha_ultima_calibracion: new Date().toISOString(),
+        });
+        return response.data;
+    },
+
+    getSensorReadings: async (id: number, params?: {
         startDate?: string;
         endDate?: string;
         limit?: number;
     }) => {
-        const response = await api.get(`sensores/${sensorId}/lecturas/`, { params });
+        const response = await axios.get(`${API_URL}/sensors/${id}/readings`, { params });
         return response.data;
     },
 
-    // Obtener alertas de un sensor
     getSensorAlerts: async (sensorId: number) => {
-        const response = await api.get(`sensores/${sensorId}/alertas/`);
+        const response = await axios.get(`${API_URL}/sensors/${sensorId}/alertas/`);
         return response.data;
     }
 };

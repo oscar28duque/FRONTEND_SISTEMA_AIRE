@@ -1,71 +1,65 @@
 import api from '../config/axios';
 
-export type AlertLevel = 'bajo' | 'medio' | 'alto' | 'critico';
-
 export interface Alert {
     id: number;
-    sensor: number; // ID del sensor
     tipo_alerta: string;
     descripcion: string;
-    nivel_alerta: AlertLevel;
+    nivel_alerta: string;
     fecha_hora: string;
     atendida: boolean;
-    atendida_por: number | null; // ID del usuario que atendió
+    atendida_por: number | null;
     fecha_atencion: string | null;
     created_at: string;
     updated_at: string;
 }
 
+interface AlertFilters {
+    atendida?: boolean;
+    tipo_alerta?: string;
+    nivel_alerta?: string;
+    fecha_inicio?: string;
+    fecha_fin?: string;
+}
+
 const alertService = {
-    // Obtener todas las alertas
-    getAllAlerts: async (params?: {
-        sensor?: number;
-        atendida?: boolean;
-        nivel_alerta?: AlertLevel;
-        startDate?: string;
-        endDate?: string;
-    }): Promise<Alert[]> => {
-        const response = await api.get('alertas/', { params });
+    getAllAlerts: async (filters: AlertFilters = {}) => {
+        const response = await api.get('/alerts', { params: filters });
         return response.data;
     },
 
-    // Obtener una alerta por ID
-    getAlertById: async (id: number): Promise<Alert> => {
-        const response = await api.get(`alertas/${id}/`);
+    getAlertById: async (id: number) => {
+        const response = await api.get(`/alerts/${id}`);
         return response.data;
     },
 
-    // Crear una nueva alerta
-    createAlert: async (alertData: Omit<Alert, 'id' | 'created_at' | 'updated_at' | 'atendida' | 'atendida_por' | 'fecha_atencion'>): Promise<Alert> => {
-        const response = await api.post('alertas/', alertData);
+    createAlert: async (alert: Omit<Alert, 'id' | 'created_at' | 'updated_at'>) => {
+        const response = await api.post('/alerts', alert);
         return response.data;
     },
 
-    // Actualizar una alerta
-    updateAlert: async (id: number, alertData: Partial<Alert>): Promise<Alert> => {
-        const response = await api.put(`alertas/${id}/`, alertData);
+    updateAlert: async (id: number, alert: Partial<Alert>) => {
+        const response = await api.put(`/alerts/${id}`, alert);
         return response.data;
     },
 
-    // Eliminar una alerta
-    deleteAlert: async (id: number): Promise<void> => {
-        await api.delete(`alertas/${id}/`);
+    deleteAlert: async (id: number) => {
+        const response = await api.delete(`/alerts/${id}`);
+        return response.data;
     },
 
-    // Marcar alerta como atendida
-    markAlertAsAttended: async (id: number, userId: number): Promise<Alert> => {
-        const response = await api.post(`alertas/${id}/atender/`, {
-            atendida_por: userId
+    markAsAttended: async (id: number, userId: number) => {
+        const response = await api.put(`/alerts/${id}/attend`, {
+            atendida_por: userId,
+            fecha_atencion: new Date().toISOString(),
         });
         return response.data;
     },
 
-    // Obtener estadísticas de alertas
     getAlertStats: async (params?: {
         startDate?: string;
         endDate?: string;
     }) => {
-        const response = await api.get('alertas/estadisticas/', { params });
+        const response = await api.get('/alerts/stats', { params });
         return response.data;
     }
 };

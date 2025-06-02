@@ -1,14 +1,16 @@
 import axios from 'axios';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+
 // Crear instancia de axios con configuración base
 const api = axios.create({
-    baseURL: 'http://localhost:8000/api/',  // Ajusta esto según tu configuración
+    baseURL: API_URL,
     headers: {
         'Content-Type': 'application/json',
     },
 });
 
-// Interceptor para agregar el token a las peticiones
+// Interceptor para agregar el token de autenticación
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token');
@@ -22,37 +24,20 @@ api.interceptors.request.use(
     }
 );
 
-// Interceptor para manejar errores y refrescar el token
+// Interceptor para manejar errores de respuesta
 api.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-        const originalRequest = error.config;
-
-        // Si el error es 401 y no hemos intentado refrescar el token
-        if (error.response.status === 401 && !originalRequest._retry) {
-            originalRequest._retry = true;
-
-            try {
-                const refreshToken = localStorage.getItem('refreshToken');
-                const response = await axios.post('http://localhost:8000/api/auth/token/refresh/', {
-                    refresh: refreshToken
-                });
-
-                const { access } = response.data;
-                localStorage.setItem('token', access);
-
-                // Reintentar la petición original con el nuevo token
-                originalRequest.headers.Authorization = `Bearer ${access}`;
-                return api(originalRequest);
-            } catch (refreshError) {
-                // Si falla el refresh, redirigir al login
+    (response) => {
+        return response;
+    },
+    (error) => {
+        if (error.response) {
+            // El servidor respondió con un código de estado fuera del rango 2xx
+            if (error.response.status === 401) {
+                // Token expirado o inválido
                 localStorage.removeItem('token');
-                localStorage.removeItem('refreshToken');
                 window.location.href = '/login';
-                return Promise.reject(refreshError);
             }
         }
-
         return Promise.reject(error);
     }
 );

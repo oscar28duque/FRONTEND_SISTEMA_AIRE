@@ -1,60 +1,66 @@
 import api from '../config/axios';
 
-export type ReadingQuality = 'bueno' | 'dudoso' | 'malo';
-
 export interface Reading {
     id: number;
-    sensor: number; // ID del sensor
+    sensor: number;
     valor: number;
     fecha_hora: string;
-    calidad_dato: ReadingQuality;
+    calidad_dato: string;
     created_at: string;
     updated_at: string;
 }
 
+interface ReadingFilters {
+    sensor?: number;
+    startDate?: string;
+    endDate?: string;
+    calidad_dato?: string;
+    limit?: number;
+}
+
 const readingService = {
-    // Obtener todas las lecturas
-    getAllReadings: async (params?: {
-        sensor?: number;
+    getAllReadings: async (filters: ReadingFilters = {}) => {
+        const response = await api.get('/readings', { params: filters });
+        return response.data;
+    },
+
+    getReadingById: async (id: number) => {
+        const response = await api.get(`/readings/${id}`);
+        return response.data;
+    },
+
+    createReading: async (reading: Omit<Reading, 'id' | 'created_at' | 'updated_at'>) => {
+        const response = await api.post('/readings', reading);
+        return response.data;
+    },
+
+    updateReading: async (id: number, reading: Partial<Reading>) => {
+        const response = await api.put(`/readings/${id}`, reading);
+        return response.data;
+    },
+
+    deleteReading: async (id: number) => {
+        const response = await api.delete(`/readings/${id}`);
+        return response.data;
+    },
+
+    getReadingsBySensor: async (sensorId: number, params?: {
         startDate?: string;
         endDate?: string;
         limit?: number;
-    }): Promise<Reading[]> => {
-        const response = await api.get('lecturas/', { params });
+    }) => {
+        const response = await api.get(`/sensors/${sensorId}/readings`, { params });
         return response.data;
     },
 
-    // Obtener una lectura por ID
-    getReadingById: async (id: number): Promise<Reading> => {
-        const response = await api.get(`lecturas/${id}/`);
-        return response.data;
-    },
-
-    // Crear una nueva lectura
-    createReading: async (readingData: Omit<Reading, 'id' | 'created_at' | 'updated_at'>): Promise<Reading> => {
-        const response = await api.post('lecturas/', readingData);
-        return response.data;
-    },
-
-    // Actualizar una lectura
-    updateReading: async (id: number, readingData: Partial<Reading>): Promise<Reading> => {
-        const response = await api.put(`lecturas/${id}/`, readingData);
-        return response.data;
-    },
-
-    // Eliminar una lectura
-    deleteReading: async (id: number): Promise<void> => {
-        await api.delete(`lecturas/${id}/`);
-    },
-
-    // Obtener estadísticas de lecturas
-    getReadingStats: async (sensorId: number, params?: {
+    getReadingsStats: async (params?: {
+        sensor?: number;
         startDate?: string;
         endDate?: string;
     }) => {
-        const response = await api.get(`lecturas/estadisticas/${sensorId}/`, { params });
+        const response = await api.get('/readings/stats', { params });
         return response.data;
-    }
+    },
 };
 
 export default readingService; 
