@@ -97,7 +97,7 @@ function App() {
           } 
         />
         <Route 
-          path="/alerts/:id/edit" 
+          path="/alerts/:id" 
           element={
             <ProtectedRoute>
               <AlertForm />
@@ -121,6 +121,14 @@ function App() {
           } 
         />
         <Route 
+          path="/sensors/:id" 
+          element={
+            <ProtectedRoute>
+              <SensorForm />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
           path="/readings" 
           element={
             <ProtectedRoute>
@@ -137,7 +145,7 @@ function App() {
           } 
         />
         <Route 
-          path="/readings/:id/edit" 
+          path="/readings/:id" 
           element={
             <ProtectedRoute>
               <ReadingForm />
@@ -169,7 +177,7 @@ function App() {
           } 
         />
         <Route 
-          path="/zonas/:id/edit" 
+          path="/zonas/:id" 
           element={
             <ProtectedRoute>
               <ZonaForm />
@@ -193,7 +201,7 @@ function App() {
           } 
         />
         <Route 
-          path="/estaciones/:id/edit" 
+          path="/estaciones/:id" 
           element={
             <ProtectedRoute>
               <EstacionForm />
@@ -201,7 +209,6 @@ function App() {
           } 
         />
         <Route path="/" element={<Navigate to="/login" replace />} />
-        {/* Aquí agregaremos más rutas cuando las creemos */}
       </Routes>
     </Router>
   );

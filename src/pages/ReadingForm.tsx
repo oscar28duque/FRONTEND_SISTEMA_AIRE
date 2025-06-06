@@ -91,10 +91,8 @@ const ReadingForm: React.FC = () => {
       };
 
       if (id) {
-        // Actualizar lectura existente
         await readingService.updateReading(parseInt(id), dataToSend);
       } else {
-        // Crear nueva lectura
         await readingService.createReading(dataToSend);
       }
       navigate('/readings');

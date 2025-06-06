@@ -55,32 +55,24 @@ const Register: React.FC = () => {
     }
 
     setLoading(true);
-
     try {
-      // Asegurarse de que todos los campos requeridos estén presentes
-      const registerData = {
+      await authService.register({
         username: formData.username,
         email: formData.email,
         password: formData.password,
-        password2: formData.confirmPassword,
         first_name: formData.first_name,
-        last_name: formData.last_name
-      };
-      console.log('Datos a enviar:', registerData);
-      await authService.register(registerData);
-      navigate('/login', { 
-        state: { message: 'Registro exitoso. Por favor, inicie sesión.' }
+        last_name: formData.last_name,
       });
+      navigate('/login');
     } catch (err: any) {
-      console.log('Error completo:', err);
-      setError(err.message || 'Error al registrar el usuario. Por favor, intente nuevamente.');
+      setError(err.response?.data?.message || 'Error al registrar el usuario');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Container component="main" maxWidth="sm">
+    <Container component="main" maxWidth="xs">
       <Box
         sx={{
           marginTop: 8,
@@ -112,69 +104,73 @@ const Register: React.FC = () => {
             </Alert>
           )}
 
-          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1, width: '100%' }}>
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-              <TextField
-                required
-                fullWidth
-                label="Nombre"
-                name="first_name"
-                autoComplete="given-name"
-                value={formData.first_name}
-                onChange={handleChange}
-              />
-              <TextField
-                required
-                fullWidth
-                label="Apellido"
-                name="last_name"
-                autoComplete="family-name"
-                value={formData.last_name}
-                onChange={handleChange}
-              />
-              <TextField
-                required
-                fullWidth
-                label="Usuario"
-                name="username"
-                autoComplete="username"
-                value={formData.username}
-                onChange={handleChange}
-                sx={{ gridColumn: { xs: '1', sm: '1 / -1' } }}
-              />
-              <TextField
-                required
-                fullWidth
-                label="Correo electrónico"
-                name="email"
-                type="email"
-                autoComplete="email"
-                value={formData.email}
-                onChange={handleChange}
-                sx={{ gridColumn: { xs: '1', sm: '1 / -1' } }}
-              />
-              <TextField
-                required
-                fullWidth
-                name="password"
-                label="Contraseña"
-                type="password"
-                autoComplete="new-password"
-                value={formData.password}
-                onChange={handleChange}
-                sx={{ gridColumn: { xs: '1', sm: '1 / -1' } }}
-              />
-              <TextField
-                required
-                fullWidth
-                name="confirmPassword"
-                label="Confirmar Contraseña"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                sx={{ gridColumn: { xs: '1', sm: '1 / -1' } }}
-              />
-            </Box>
+          <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  required
+                  fullWidth
+                  label="Nombre"
+                  name="first_name"
+                  value={formData.first_name}
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  required
+                  fullWidth
+                  label="Apellido"
+                  name="last_name"
+                  value={formData.last_name}
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  required
+                  fullWidth
+                  label="Usuario"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  required
+                  fullWidth
+                  label="Correo electrónico"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  required
+                  fullWidth
+                  label="Contraseña"
+                  name="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  helperText="Mínimo 8 caracteres"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  required
+                  fullWidth
+                  label="Confirmar contraseña"
+                  name="confirmPassword"
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                />
+              </Grid>
+            </Grid>
             <Button
               type="submit"
               fullWidth
@@ -184,7 +180,7 @@ const Register: React.FC = () => {
             >
               {loading ? 'Registrando...' : 'Registrarse'}
             </Button>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
               <Link
                 component="button"
                 variant="body2"

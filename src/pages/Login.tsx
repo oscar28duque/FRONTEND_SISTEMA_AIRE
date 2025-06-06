@@ -30,6 +30,7 @@ const Login: React.FC = () => {
   const [recoveryDialogOpen, setRecoveryDialogOpen] = useState(false);
   const [recoveryEmail, setRecoveryEmail] = useState('');
   const [recoveryMessage, setRecoveryMessage] = useState<string | null>(null);
+  const [recoveryLoading, setRecoveryLoading] = useState(false);
 
   // Cargar usuario guardado al iniciar
   useEffect(() => {
@@ -74,7 +75,12 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleRecoverySubmit = async () => {
+  const handleRecoverySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setRecoveryLoading(true);
+    setRecoveryMessage(null);
+
     try {
       await authService.requestPasswordRecovery(recoveryEmail);
       setRecoveryMessage('Se ha enviado un correo con las instrucciones para recuperar su contraseña.');
@@ -85,7 +91,25 @@ const Login: React.FC = () => {
       }, 3000);
     } catch (err) {
       setRecoveryMessage('Error al procesar la solicitud. Por favor, intente nuevamente.');
+    } finally {
+      setRecoveryLoading(false);
     }
+  };
+
+  const handleCloseRecoveryDialog = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!recoveryLoading) {
+      setRecoveryDialogOpen(false);
+      setRecoveryEmail('');
+      setRecoveryMessage(null);
+    }
+  };
+
+  const handleOpenRecoveryDialog = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setRecoveryDialogOpen(true);
   };
 
   return (
@@ -121,7 +145,7 @@ const Login: React.FC = () => {
             </Alert>
           )}
 
-          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1, width: '100%' }}>
+          <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
             <TextField
               margin="normal"
               required
@@ -166,11 +190,11 @@ const Login: React.FC = () => {
             >
               {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </Button>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
               <Link
                 component="button"
                 variant="body2"
-                onClick={() => setRecoveryDialogOpen(true)}
+                onClick={handleOpenRecoveryDialog}
                 sx={{ cursor: 'pointer' }}
               >
                 ¿Olvidó su contraseña?
@@ -189,7 +213,11 @@ const Login: React.FC = () => {
       </Box>
 
       {/* Diálogo de recuperación de contraseña */}
-      <Dialog open={recoveryDialogOpen} onClose={() => setRecoveryDialogOpen(false)}>
+      <Dialog 
+        open={recoveryDialogOpen} 
+        onClose={handleCloseRecoveryDialog}
+        onClick={(e) => e.stopPropagation()}
+      >
         <DialogTitle>Recuperar Contraseña</DialogTitle>
         <DialogContent>
           {recoveryMessage ? (
@@ -197,23 +225,36 @@ const Login: React.FC = () => {
               {recoveryMessage}
             </Alert>
           ) : (
-            <TextField
-              autoFocus
-              margin="dense"
-              label="Correo electrónico"
-              type="email"
-              fullWidth
-              variant="outlined"
-              value={recoveryEmail}
-              onChange={(e) => setRecoveryEmail(e.target.value)}
-            />
+            <Box component="form" onSubmit={handleRecoverySubmit} onClick={(e) => e.stopPropagation()}>
+              <TextField
+                autoFocus
+                margin="dense"
+                label="Correo electrónico"
+                type="email"
+                fullWidth
+                variant="outlined"
+                value={recoveryEmail}
+                onChange={(e) => setRecoveryEmail(e.target.value)}
+                required
+                onClick={(e) => e.stopPropagation()}
+              />
+            </Box>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setRecoveryDialogOpen(false)}>Cancelar</Button>
+          <Button 
+            onClick={handleCloseRecoveryDialog}
+            disabled={recoveryLoading}
+          >
+            Cancelar
+          </Button>
           {!recoveryMessage && (
-            <Button onClick={handleRecoverySubmit} variant="contained">
-              Enviar
+            <Button 
+              onClick={handleRecoverySubmit} 
+              variant="contained"
+              disabled={!recoveryEmail || recoveryLoading}
+            >
+              {recoveryLoading ? 'Enviando...' : 'Enviar'}
             </Button>
           )}
         </DialogActions>

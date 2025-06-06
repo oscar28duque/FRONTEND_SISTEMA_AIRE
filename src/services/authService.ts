@@ -9,14 +9,20 @@ export interface RegisterData {
     username: string;
     email: string;
     password: string;
-    password2: string;
     first_name: string;
     last_name: string;
 }
 
-export interface TokenResponse {
+export interface AuthResponse {
     access: string;
     refresh: string;
+    user: {
+        id: number;
+        username: string;
+        email: string;
+        first_name: string;
+        last_name: string;
+    };
 }
 
 export class AuthError extends Error {
@@ -28,13 +34,11 @@ export class AuthError extends Error {
 
 const authService = {
     // Login
-    login: async (data: LoginData): Promise<TokenResponse> => {
+    login: async (data: LoginData): Promise<AuthResponse> => {
         try {
-            const response = await api.post<TokenResponse>('auth/login/', data);
-            if (response.data.access) {
-                localStorage.setItem('token', response.data.access);
-                localStorage.setItem('refreshToken', response.data.refresh);
-            }
+            const response = await api.post<AuthResponse>('/auth/login/', data);
+            localStorage.setItem('token', response.data.access);
+            localStorage.setItem('refreshToken', response.data.refresh);
             return response.data;
         } catch (error: any) {
             if (error.response?.status === 401) {
@@ -45,9 +49,9 @@ const authService = {
     },
 
     // Registro
-    register: async (data: RegisterData) => {
+    register: async (data: RegisterData): Promise<AuthResponse> => {
         try {
-            const response = await api.post('auth/registro/', data);
+            const response = await api.post<AuthResponse>('/auth/registro/', data);
             return response.data;
         } catch (error: any) {
             console.log('Error completo:', error.response?.data);
@@ -60,9 +64,6 @@ const authService = {
             if (error.response?.data?.password) {
                 throw new AuthError(error.response.data.password[0]);
             }
-            if (error.response?.data?.password2) {
-                throw new AuthError(error.response.data.password2[0]);
-            }
             throw new AuthError('Error al registrar usuario: ' + JSON.stringify(error.response?.data));
         }
     },
@@ -70,7 +71,7 @@ const authService = {
     // Obtener usuario actual
     getCurrentUser: async () => {
         try {
-            const response = await api.get('auth/usuario-actual/');
+            const response = await api.get('/auth/usuario-actual/');
             return response.data;
         } catch (error: any) {
             throw new AuthError('Error al obtener información del usuario');
@@ -87,7 +88,7 @@ const authService = {
     // Solicitar recuperación de contraseña
     requestPasswordRecovery: async (email: string) => {
         try {
-            const response = await api.post('auth/solicitar-recuperacion/', { email });
+            const response = await api.post('/auth/recuperar-contrasena/', { email });
             return response.data;
         } catch (error: any) {
             throw new AuthError('Error al solicitar recuperación de contraseña');
@@ -114,6 +115,19 @@ const authService = {
             return response.data;
         } catch (error: any) {
             throw new AuthError('Error al cambiar la contraseña');
+        }
+    },
+
+    // Resetear contraseña
+    resetPassword: async (token: string, password: string) => {
+        try {
+            const response = await api.post('/auth/restablecer-contrasena/', {
+                token,
+                password,
+            });
+            return response.data;
+        } catch (error: any) {
+            throw new AuthError('Error al restablecer la contraseña');
         }
     }
 };
