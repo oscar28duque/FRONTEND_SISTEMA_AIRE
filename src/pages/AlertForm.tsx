@@ -6,58 +6,67 @@ import {
   Typography,
   TextField,
   Button,
-  Grid,
   MenuItem,
   Alert,
-  FormControl,
-  InputLabel,
-  Select,
-  SelectChangeEvent,
+  Grid,
 } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import alertService from '../services/alertService';
-import { Alert as AlertType, AlertLevel } from '../types';
+import sensorService from '../services/sensorService';
 
-const niveles: AlertLevel[] = ['info', 'warning', 'error', 'critical'];
+const niveles = [
+  { value: 'bajo', label: 'Bajo' },
+  { value: 'medio', label: 'Medio' },
+  { value: 'alto', label: 'Alto' }
+];
+
+const tipos = [
+  { value: 'error', label: 'Error' },
+  { value: 'advertencia', label: 'Advertencia' },
+  { value: 'info', label: 'Información' }
+];
+
+interface Sensor {
+  id: number;
+  tipo_sensor: string;
+  modelo: string;
+}
 
 const AlertForm: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sensors, setSensors] = useState<Sensor[]>([]);
   const [formData, setFormData] = useState({
+    sensor: '',
     tipo_alerta: '',
     descripcion: '',
-    nivel_alerta: 'info' as AlertLevel,
-    fecha_hora: '',
-    atendida: false,
-    atendida_por: '',
-    fecha_atencion: '',
+    nivel_alerta: 'medio',
   });
 
   useEffect(() => {
-    if (id) {
-      const fetchAlert = async () => {
-        try {
-          const alert = await alertService.getAlertById(parseInt(id));
+    const fetchData = async () => {
+      try {
+        const sensorsResponse = await sensorService.getAllSensors();
+        setSensors(sensorsResponse);
+        
+        if (id) {
+          const alertResponse = await alertService.getAlert(parseInt(id));
           setFormData({
-            tipo_alerta: alert.tipo_alerta,
-            descripcion: alert.descripcion,
-            nivel_alerta: alert.nivel_alerta as AlertLevel,
-            fecha_hora: alert.fecha_hora,
-            atendida: alert.atendida,
-            atendida_por: alert.atendida_por?.toString() || '',
-            fecha_atencion: alert.fecha_atencion || '',
+            sensor: alertResponse.sensor.toString(),
+            tipo_alerta: alertResponse.tipo_alerta,
+            descripcion: alertResponse.descripcion,
+            nivel_alerta: alertResponse.nivel_alerta,
           });
-        } catch (err) {
-          setError('Error al cargar los datos de la alerta');
         }
-      };
-      fetchAlert();
-    }
+      } catch (err) {
+        setError('Error al cargar los datos');
+      }
+    };
+    fetchData();
   }, [id]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -67,33 +76,35 @@ const AlertForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-
     try {
-      const alertData = {
-        ...formData,
-        atendida_por: formData.atendida_por ? parseInt(formData.atendida_por) : null,
+      const dataToSend = {
+        sensor: parseInt(formData.sensor),
+        tipo_alerta: formData.tipo_alerta,
+        descripcion: formData.descripcion,
+        nivel_alerta: formData.nivel_alerta,
+        fecha_hora: new Date().toISOString(),
+        atendida: false,
+        atendida_por: null,
+        fecha_atencion: null
       };
 
       if (id) {
-        await alertService.updateAlert(parseInt(id), alertData);
+        // Actualizar alerta existente
+        await alertService.updateAlert(parseInt(id), dataToSend);
       } else {
-        await alertService.createAlert(alertData);
+        // Crear nueva alerta
+        await alertService.createAlert(dataToSend);
       }
-
       navigate('/alerts');
     } catch (err) {
       setError('Error al guardar la alerta');
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
     <Container maxWidth="md">
-      <Paper sx={{ p: 4, mt: 4 }}>
-        <Typography variant="h5" component="h1" gutterBottom>
+      <Box sx={{ mt: 4, mb: 4 }}>
+        <Typography variant="h4" component="h1" gutterBottom>
           {id ? 'Editar Alerta' : 'Nueva Alerta'}
         </Typography>
 
@@ -103,93 +114,94 @@ const AlertForm: React.FC = () => {
           </Alert>
         )}
 
-        <Box component="form" onSubmit={handleSubmit} sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-          <TextField
-            fullWidth
-            label="Tipo de Alerta"
-            name="tipo_alerta"
-            value={formData.tipo_alerta}
-            onChange={handleChange}
-            required
-          />
-
-          <FormControl fullWidth>
-            <InputLabel>Nivel de Alerta</InputLabel>
-            <Select
-              name="nivel_alerta"
-              value={formData.nivel_alerta}
-              onChange={handleChange}
-              required
-            >
-              {niveles.map((nivel) => (
-                <MenuItem key={nivel} value={nivel}>
-                  {nivel}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <TextField
-            fullWidth
-            label="Descripción"
-            name="descripcion"
-            multiline
-            rows={4}
-            value={formData.descripcion}
-            onChange={handleChange}
-            required
-            sx={{ gridColumn: '1 / -1' }}
-          />
-
-          <TextField
-            fullWidth
-            label="Fecha y Hora"
-            name="fecha_hora"
-            type="datetime-local"
-            value={formData.fecha_hora}
-            onChange={handleChange}
-            required
-            InputLabelProps={{ shrink: true }}
-          />
-
-          <TextField
-            fullWidth
-            label="Atendida por (ID)"
-            name="atendida_por"
-            type="number"
-            value={formData.atendida_por}
-            onChange={handleChange}
-          />
-
-          <TextField
-            fullWidth
-            label="Fecha de Atención"
-            name="fecha_atencion"
-            type="datetime-local"
-            value={formData.fecha_atencion}
-            onChange={handleChange}
-            InputLabelProps={{ shrink: true }}
-          />
-
-          <Box sx={{ gridColumn: '1 / -1', display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 3 }}>
-            <Button
-              variant="outlined"
-              onClick={() => navigate('/alerts')}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              disabled={loading}
-            >
-              {loading ? 'Guardando...' : 'Guardar'}
-            </Button>
-          </Box>
-        </Box>
-      </Paper>
+        <Paper sx={{ p: 3 }}>
+          <form onSubmit={handleSubmit}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  required
+                  fullWidth
+                  select
+                  label="Sensor"
+                  name="sensor"
+                  value={formData.sensor}
+                  onChange={handleChange}
+                >
+                  {sensors.map((sensor) => (
+                    <MenuItem key={sensor.id} value={sensor.id}>
+                      {sensor.tipo_sensor} - {sensor.modelo}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  required
+                  fullWidth
+                  select
+                  label="Tipo de Alerta"
+                  name="tipo_alerta"
+                  value={formData.tipo_alerta}
+                  onChange={handleChange}
+                >
+                  {tipos.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  required
+                  fullWidth
+                  label="Descripción"
+                  name="descripcion"
+                  multiline
+                  rows={4}
+                  value={formData.descripcion}
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  required
+                  fullWidth
+                  select
+                  label="Nivel de Alerta"
+                  name="nivel_alerta"
+                  value={formData.nivel_alerta}
+                  onChange={handleChange}
+                >
+                  {niveles.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid item xs={12}>
+                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                  <Button
+                    variant="outlined"
+                    onClick={() => navigate('/alerts')}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                  >
+                    {id ? 'Actualizar' : 'Guardar'}
+                  </Button>
+                </Box>
+              </Grid>
+            </Grid>
+          </form>
+        </Paper>
+      </Box>
     </Container>
   );
 };
 
-export default AlertForm; 
+export default AlertForm;

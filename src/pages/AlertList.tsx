@@ -85,6 +85,10 @@ const AlertList: React.FC = () => {
     setSelectedAlert(null);
   };
 
+  const handleNewAlert = () => {
+    navigate('/alerts/new');
+  };
+
   const getAlertColor = (nivel: string) => {
     switch (nivel) {
       case 'alto':
@@ -108,7 +112,7 @@ const AlertList: React.FC = () => {
           <Button
             variant="contained"
             startIcon={<AddIcon />}
-            onClick={() => navigate('/alerts/new')}
+            onClick={handleNewAlert}
           >
             Nueva Alerta
           </Button>

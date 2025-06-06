@@ -94,6 +94,10 @@ const ReadingList: React.FC = () => {
     setSelectedReading(null);
   };
 
+  const handleNewReading = () => {
+    navigate('/readings/new');
+  };
+
   const getSensorInfo = (sensorId: number) => {
     const sensor = sensors.find(s => s.id === sensorId);
     return sensor ? `${sensor.tipo_sensor} - ${sensor.modelo}` : 'N/A';
@@ -114,7 +118,7 @@ const ReadingList: React.FC = () => {
           <Button
             variant="contained"
             startIcon={<AddIcon />}
-            onClick={() => navigate('/readings/new')}
+            onClick={handleNewReading}
           >
             Nueva Lectura
           </Button>

@@ -57,14 +57,23 @@ const Register: React.FC = () => {
     setLoading(true);
 
     try {
-      // Eliminar confirmPassword antes de enviar al API
-      const { confirmPassword, ...registerData } = formData;
+      // Asegurarse de que todos los campos requeridos estén presentes
+      const registerData = {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        password2: formData.confirmPassword,
+        first_name: formData.first_name,
+        last_name: formData.last_name
+      };
+      console.log('Datos a enviar:', registerData);
       await authService.register(registerData);
       navigate('/login', { 
         state: { message: 'Registro exitoso. Por favor, inicie sesión.' }
       });
-    } catch (err) {
-      setError('Error al registrar el usuario. Por favor, intente nuevamente.');
+    } catch (err: any) {
+      console.log('Error completo:', err);
+      setError(err.message || 'Error al registrar el usuario. Por favor, intente nuevamente.');
     } finally {
       setLoading(false);
     }

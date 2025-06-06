@@ -25,6 +25,8 @@ import {
   Timeline as TimelineIcon,
   Warning as WarningIcon,
   Logout as LogoutIcon,
+  LocationOn as LocationIcon,
+  Business as BusinessIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -49,6 +51,8 @@ const Navigation: React.FC = () => {
 
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
+    { text: 'Zonas', icon: <LocationIcon />, path: '/zonas' },
+    { text: 'Estaciones', icon: <BusinessIcon />, path: '/estaciones' },
     { text: 'Sensores', icon: <SensorsIcon />, path: '/sensors' },
     { text: 'Lecturas', icon: <TimelineIcon />, path: '/readings' },
     { text: 'Alertas', icon: <WarningIcon />, path: '/alerts' },

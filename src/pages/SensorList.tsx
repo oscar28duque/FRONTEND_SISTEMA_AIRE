@@ -17,6 +17,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  CircularProgress,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import EditIcon from '@mui/icons-material/Edit';
@@ -47,14 +48,16 @@ const SensorList: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedSensor, setSelectedSensor] = useState<Sensor | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const fetchSensors = async () => {
     try {
+      setLoading(true);
       const response = await sensorService.getAllSensors();
       setSensors(response);
       setError(null);
     } catch (err) {
-      setError('Error al cargar los sensores');
+      setError('Error al cargar los sensores. Por favor, intente nuevamente.');
     } finally {
       setLoading(false);
     }
@@ -76,15 +79,22 @@ const SensorList: React.FC = () => {
   const confirmDelete = async () => {
     if (selectedSensor) {
       try {
+        setDeleteLoading(true);
         await sensorService.deleteSensor(selectedSensor.id);
         await fetchSensors();
         setError(null);
       } catch (err) {
-        setError('Error al eliminar el sensor');
+        setError('Error al eliminar el sensor. Por favor, intente nuevamente.');
+      } finally {
+        setDeleteLoading(false);
+        setDeleteDialogOpen(false);
+        setSelectedSensor(null);
       }
     }
-    setDeleteDialogOpen(false);
-    setSelectedSensor(null);
+  };
+
+  const handleNewSensor = () => {
+    navigate('/sensors/new');
   };
 
   return (
@@ -97,7 +107,7 @@ const SensorList: React.FC = () => {
           <Button
             variant="contained"
             startIcon={<AddIcon />}
-            onClick={() => navigate('/sensors/new')}
+            onClick={handleNewSensor}
           >
             Nuevo Sensor
           </Button>
@@ -109,73 +119,97 @@ const SensorList: React.FC = () => {
           </Alert>
         )}
 
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Tipo</TableCell>
-                <TableCell>Modelo</TableCell>
-                <TableCell>Estado</TableCell>
-                <TableCell>Estación</TableCell>
-                <TableCell>Rango</TableCell>
-                <TableCell>Última Calibración</TableCell>
-                <TableCell>Acciones</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {sensors.map((sensor) => (
-                <TableRow key={sensor.id}>
-                  <TableCell>{sensor.id}</TableCell>
-                  <TableCell>{sensor.tipo_sensor}</TableCell>
-                  <TableCell>{sensor.modelo}</TableCell>
-                  <TableCell>{sensor.estado}</TableCell>
-                  <TableCell>{sensor.estacion}</TableCell>
-                  <TableCell>
-                    {sensor.rango_minimo && sensor.rango_maximo
-                      ? `${sensor.rango_minimo} - ${sensor.rango_maximo} ${sensor.unidad_medida || ''}`
-                      : 'N/A'}
-                  </TableCell>
-                  <TableCell>
-                    {sensor.fecha_ultima_calibracion
-                      ? new Date(sensor.fecha_ultima_calibracion).toLocaleDateString()
-                      : 'N/A'}
-                  </TableCell>
-                  <TableCell>
-                    <IconButton
-                      color="primary"
-                      onClick={() => handleEdit(sensor)}
-                      size="small"
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      color="error"
-                      onClick={() => handleDelete(sensor)}
-                      size="small"
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>ID</TableCell>
+                  <TableCell>Tipo</TableCell>
+                  <TableCell>Modelo</TableCell>
+                  <TableCell>Estado</TableCell>
+                  <TableCell>Estación</TableCell>
+                  <TableCell>Rango</TableCell>
+                  <TableCell>Última Calibración</TableCell>
+                  <TableCell>Acciones</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {sensors.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} align="center">
+                      No hay sensores registrados
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  sensors.map((sensor) => (
+                    <TableRow key={sensor.id}>
+                      <TableCell>{sensor.id}</TableCell>
+                      <TableCell>{sensor.tipo_sensor}</TableCell>
+                      <TableCell>{sensor.modelo}</TableCell>
+                      <TableCell>{sensor.estado}</TableCell>
+                      <TableCell>{sensor.estacion}</TableCell>
+                      <TableCell>
+                        {sensor.rango_minimo && sensor.rango_maximo
+                          ? `${sensor.rango_minimo} - ${sensor.rango_maximo} ${sensor.unidad_medida || ''}`
+                          : 'N/A'}
+                      </TableCell>
+                      <TableCell>
+                        {sensor.fecha_ultima_calibracion
+                          ? new Date(sensor.fecha_ultima_calibracion).toLocaleDateString()
+                          : 'N/A'}
+                      </TableCell>
+                      <TableCell>
+                        <IconButton
+                          color="primary"
+                          onClick={() => handleEdit(sensor)}
+                          size="small"
+                        >
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton
+                          color="error"
+                          onClick={() => handleDelete(sensor)}
+                          size="small"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
       </Box>
 
       <Dialog
         open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
+        onClose={() => !deleteLoading && setDeleteDialogOpen(false)}
       >
         <DialogTitle>Confirmar Eliminación</DialogTitle>
         <DialogContent>
           ¿Está seguro que desea eliminar el sensor {selectedSensor?.tipo_sensor} - {selectedSensor?.modelo}?
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancelar</Button>
-          <Button onClick={confirmDelete} color="error">
-            Eliminar
+          <Button 
+            onClick={() => setDeleteDialogOpen(false)} 
+            disabled={deleteLoading}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            onClick={confirmDelete} 
+            color="error"
+            disabled={deleteLoading}
+            startIcon={deleteLoading ? <CircularProgress size={20} /> : null}
+          >
+            {deleteLoading ? 'Eliminando...' : 'Eliminar'}
           </Button>
         </DialogActions>
       </Dialog>

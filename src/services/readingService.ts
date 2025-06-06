@@ -1,4 +1,13 @@
-import api from '../config/axios';
+import axios from 'axios';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+
+export interface ReadingFilters {
+    sensor?: number;
+    start_date?: string;
+    end_date?: string;
+    limit?: number;
+}
 
 export interface Reading {
     id: number;
@@ -10,38 +19,50 @@ export interface Reading {
     updated_at: string;
 }
 
-interface ReadingFilters {
-    sensor?: number;
-    startDate?: string;
-    endDate?: string;
-    calidad_dato?: string;
-    limit?: number;
-}
-
 const readingService = {
-    getAllReadings: async (filters: ReadingFilters = {}) => {
-        const response = await api.get('/readings', { params: filters });
+    getAllReadings: async (filters?: ReadingFilters) => {
+        const response = await axios.get(`${API_URL}/readings/`, {
+            params: filters,
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
         return response.data;
     },
 
-    getReadingById: async (id: number) => {
-        const response = await api.get(`/readings/${id}`);
+    getReading: async (id: number) => {
+        const response = await axios.get(`${API_URL}/readings/${id}/`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
         return response.data;
     },
 
     createReading: async (reading: Omit<Reading, 'id' | 'created_at' | 'updated_at'>) => {
-        const response = await api.post('/readings', reading);
+        const response = await axios.post(`${API_URL}/readings/`, reading, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
         return response.data;
     },
 
     updateReading: async (id: number, reading: Partial<Reading>) => {
-        const response = await api.put(`/readings/${id}`, reading);
+        const response = await axios.put(`${API_URL}/readings/${id}/`, reading, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
         return response.data;
     },
 
     deleteReading: async (id: number) => {
-        const response = await api.delete(`/readings/${id}`);
-        return response.data;
+        await axios.delete(`${API_URL}/readings/${id}/`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
     },
 
     getReadingsBySensor: async (sensorId: number, params?: {
@@ -49,7 +70,7 @@ const readingService = {
         endDate?: string;
         limit?: number;
     }) => {
-        const response = await api.get(`/sensors/${sensorId}/readings`, { params });
+        const response = await axios.get(`${API_URL}/sensors/${sensorId}/readings`, { params });
         return response.data;
     },
 
@@ -58,7 +79,7 @@ const readingService = {
         startDate?: string;
         endDate?: string;
     }) => {
-        const response = await api.get('/readings/stats', { params });
+        const response = await axios.get('/readings/stats', { params });
         return response.data;
     },
 };
